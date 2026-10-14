@@ -1,0 +1,21 @@
+{
+  "name": "rand-note",
+  "private": true,
+  "scripts": {
+    "dev:worker": "wrangler dev --port 8787 --var ALLOWED_ORIGIN:http://localhost:8788",
+    "dev:pages": "wrangler pages dev public --port 8788",
+    "build:worker": "worker-build --release",
+    "test": "cargo test",
+    "fmt": "cargo fmt --check",
+    "migrate:local": "wrangler d1 migrations apply rand-note --local",
+    "deploy:worker": "wrangler deploy",
+    "deploy:pages": "wrangler pages deploy public --project-name rand-note"
+  },
+  "devDependencies": {
+    "wrangler": "^4.149.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261006.1": true
+  }
+}

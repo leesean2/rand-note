@@ -1,0 +1,27 @@
+name = "rand-note-api"
+main = "build/worker/shim.mjs"
+compatibility_date = "2026-10-13"
+workers_dev = true
+
+[build]
+command = "worker-build --release"
+
+[vars]
+ALLOWED_ORIGIN = "https://note.random6.xyz"
+
+[[routes]]
+pattern = "note.random6.xyz/api/*"
+zone_name = "random6.xyz"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rand-note"
+database_id = "48bdd7b6-25da-4a4c-83ce-4190c0b29adc"
+migrations_dir = "migrations"
+
+[[ratelimits]]
+name = "NOTE_LIMITER"
+namespace_id = "1001"
+[ratelimits.simple]
+limit = 5
+period = 60

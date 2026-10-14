@@ -1,0 +1,7 @@
+/target
+/AGENTS.md
+/node_modules/
+/.wrangler/
+/.dev.vars
+/build/
+/lab/
