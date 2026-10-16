@@ -9,6 +9,7 @@ const MAX_NOTE_CHARS: usize = 250;
 const MAX_NOTE_LINES: usize = 10;
 const MAX_REQUEST_BYTES: usize = 4_096;
 const KST_OFFSET_SECONDS: i32 = 9 * 60 * 60;
+const HISTORY_START_DATE: &str = "2026-10-14";
 const ADMIN_COOKIE_NAME: &str = "admin_session";
 
 #[derive(Debug, Deserialize)]
@@ -420,6 +421,7 @@ fn validate_date(
     requested_date: Option<String>,
     today: &str,
 ) -> std::result::Result<String, &'static str> {
+    let is_explicit_date = requested_date.is_some();
     let date = requested_date.unwrap_or_else(|| today.to_owned());
     let parsed_date = NaiveDate::parse_from_str(&date, "%Y-%m-%d").map_err(|_| "invalid_date")?;
     if parsed_date.format("%Y-%m-%d").to_string() != date {
@@ -427,11 +429,14 @@ fn validate_date(
     }
 
     let parsed_today = NaiveDate::parse_from_str(today, "%Y-%m-%d").map_err(|_| "invalid_date")?;
-    if parsed_date < parsed_today {
-        return Err("past_date");
-    }
     if parsed_date > parsed_today {
         return Err("future_date");
+    }
+
+    let history_start =
+        NaiveDate::parse_from_str(HISTORY_START_DATE, "%Y-%m-%d").map_err(|_| "invalid_date")?;
+    if is_explicit_date && parsed_date < history_start {
+        return Err("history_not_available");
     }
 
     Ok(date)
@@ -482,22 +487,34 @@ mod tests {
     }
 
     #[test]
-    fn date_validation_only_allows_today() {
+    fn date_validation_allows_history_from_start_through_today() {
         assert_eq!(
-            validate_date(Some("2024-02-30".to_owned()), "2024-03-01"),
+            validate_date(Some("2026-02-30".to_owned()), "2026-10-15"),
             Err("invalid_date")
         );
         assert_eq!(
-            validate_date(Some("2024-02-29".to_owned()), "2024-03-01"),
-            Err("past_date")
+            validate_date(Some("2026-10-13".to_owned()), "2026-10-15"),
+            Err("history_not_available")
         );
         assert_eq!(
-            validate_date(Some("2024-03-02".to_owned()), "2024-03-01"),
+            validate_date(Some("2026-10-14".to_owned()), "2026-10-15"),
+            Ok("2026-10-14".to_owned())
+        );
+        assert_eq!(
+            validate_date(Some("2026-10-15".to_owned()), "2026-10-15"),
+            Ok("2026-10-15".to_owned())
+        );
+        assert_eq!(
+            validate_date(Some("2026-10-16".to_owned()), "2026-10-15"),
             Err("future_date")
         );
+    }
+
+    #[test]
+    fn date_validation_defaults_to_today_before_history_starts() {
         assert_eq!(
-            validate_date(Some("2024-03-01".to_owned()), "2024-03-01"),
-            Ok("2024-03-01".to_owned())
+            validate_date(None, "2026-10-13"),
+            Ok("2026-10-13".to_owned())
         );
     }
 

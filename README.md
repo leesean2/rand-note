@@ -1,6 +1,6 @@
 # Public Note Board
 
-A shared sticky-note board that opens a new board each day using Korea Standard Time (KST). Anyone can post notes to today's board and read today's board. The UI and API only allow today's date; earlier notes remain stored but are not browseable. Notes are limited to 10 lines and 250 characters.
+A shared sticky-note board that opens a new board each day using Korea Standard Time (KST). Anyone can post notes to today's board and browse read-only archives dated 2026-10-14 through today. The default board remains today's board; dates before the archive start and future dates cannot be selected for browsing. Notes are limited to 10 lines and 250 characters.
 
 ## Structure
 

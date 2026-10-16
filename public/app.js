@@ -1,5 +1,6 @@
 (() => {
   const API_BASE = (window.RAND_NOTE_CONFIG?.apiBaseUrl || "http://localhost:8787").replace(/\/$/, "");
+  const HISTORY_START_DATE = "2026-10-14";
   const MAX_NOTE_LINES = 10;
   const MAX_NOTE_CHARS = 250;
   const state = { today: null, selectedDate: null, notes: [], isAdmin: false };
@@ -25,7 +26,7 @@
       text_too_long: "Notes can be up to 250 characters.",
       invalid_json: "Could not read this note.",
       invalid_date: "Choose a valid date.",
-      past_date: "Past dates are unavailable.",
+      history_not_available: "History starts on 2026-10-14.",
       future_date: "Future dates are unavailable.",
       admin_required: "Admin cookie required.",
       origin_required: "Admin actions must come from this site.",
@@ -113,7 +114,9 @@
     dateInput.value = date;
     boardHeading.textContent = date;
     noteForm.hidden = date !== state.today;
-    boardStatus.textContent = date === state.today ? "Today" : "Archive · Read only";
+    boardStatus.textContent = date === state.today
+      ? (state.today >= HISTORY_START_DATE ? "Today" : errorMessage("history_not_available"))
+      : "Archive · Read only";
     renderNotes(notes);
   }
 
@@ -163,8 +166,10 @@
     try {
       const data = await api("/api/notes");
       state.today = data.date;
-      dateInput.min = data.date;
+      dateInput.min = HISTORY_START_DATE;
       dateInput.max = data.date;
+      dateInput.disabled = data.date < HISTORY_START_DATE;
+      viewDateButton.disabled = data.date < HISTORY_START_DATE;
       setSelectedDate(data.date, data.notes);
       formStatus.textContent = "";
     } catch (error) {
@@ -181,9 +186,14 @@
       boardStatus.textContent = "Choose a date";
       return;
     }
-    if (state.today && date !== state.today) {
+    if (state.today && date < HISTORY_START_DATE) {
+      dateInput.value = state.today >= HISTORY_START_DATE ? state.today : "";
+      boardStatus.textContent = errorMessage("history_not_available");
+      return;
+    }
+    if (state.today && date > state.today) {
       dateInput.value = state.today;
-      boardStatus.textContent = errorMessage(date < state.today ? "past_date" : "future_date");
+      boardStatus.textContent = errorMessage("future_date");
       return;
     }
     boardStatus.textContent = "Loading…";
